@@ -14,21 +14,39 @@ import Layout from './components/Layout';
 function App() {
   return (
     <CartProvider>
-      <Router>
+      <Router basename={import.meta.env.DEV ? '/' : '/Deck'}>
         <div className="min-h-screen bg-gradient-dark text-white">
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
-            <Route path="/*" element={
+            <Route path="/marketplace" element={
               <Layout>
-                <Routes>
-                  <Route path="/marketplace" element={<MarketplacePage />} />
-                  <Route path="/list" element={<ListItemPage />} />
-                  <Route path="/visualizer" element={<RoomVisualizerPage />} />
-                  <Route path="/auction/:id" element={<CheckoutPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/admin" element={<AdminPage />} />
-                </Routes>
+                <MarketplacePage />
+              </Layout>
+            } />
+            <Route path="/list" element={
+              <Layout>
+                <ListItemPage />
+              </Layout>
+            } />
+            <Route path="/visualizer" element={
+              <Layout>
+                <RoomVisualizerPage />
+              </Layout>
+            } />
+            <Route path="/auction/:id" element={
+              <Layout>
+                <CheckoutPage />
+              </Layout>
+            } />
+            <Route path="/profile" element={
+              <Layout>
+                <ProfilePage />
+              </Layout>
+            } />
+            <Route path="/admin" element={
+              <Layout>
+                <AdminPage />
               </Layout>
             } />
           </Routes>
