@@ -1,4 +1,4 @@
-const https = require('https');
+import https from 'https';
 
 const checkDeployment = () => {
   const url = 'https://AILABS-WORK.github.io/Deck';
