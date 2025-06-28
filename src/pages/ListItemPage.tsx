@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Camera, Plus, X, Sparkles, DollarSign, TrendingUp } from 'lucide-react';
+import { Camera, Plus, X, Sparkles, DollarSign, TrendingUp, Wand2 } from 'lucide-react';
 import ListingBoost from '../components/ListingBoost';
+import AIListingAssistant from '../components/AIListingAssistant';
 
 interface ListItemForm {
   title: string;
@@ -15,12 +16,11 @@ interface ListItemForm {
 const ListItemPage: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [suggestedPrice, setSuggestedPrice] = useState<number | null>(null);
   const [showBoostOptions, setShowBoostOptions] = useState(false);
   const [listingId, setListingId] = useState<string | null>(null);
+  const [aiGenerated, setAiGenerated] = useState(false);
   
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<ListItemForm>();
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ListItemForm>();
 
   const categories = [
     'Furniture', 'Electronics', 'Textbooks', 'Decor', 'Appliances', 
@@ -34,14 +34,6 @@ const ListItemPage: React.FC = () => {
     if (files) {
       const newImages = Array.from(files).map(file => URL.createObjectURL(file));
       setImages(prev => [...prev, ...newImages].slice(0, 5));
-      
-      // Simulate AI processing
-      setIsAIProcessing(true);
-      setTimeout(() => {
-        setSuggestedTags(['modern', 'dorm-friendly', 'minimalist']);
-        setSuggestedPrice(25);
-        setIsAIProcessing(false);
-      }, 2000);
     }
   };
 
@@ -49,14 +41,17 @@ const ListItemPage: React.FC = () => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const acceptSuggestedPrice = () => {
-    if (suggestedPrice) {
-      setValue('price', suggestedPrice);
-    }
+  const handleAIDataGenerated = (aiData: any) => {
+    setValue('title', aiData.title);
+    setValue('description', aiData.description);
+    setValue('category', aiData.category);
+    setValue('condition', aiData.condition);
+    setValue('price', aiData.suggestedPrice);
+    setAiGenerated(true);
   };
 
   const onSubmit = (data: ListItemForm) => {
-    console.log('Listing data:', { ...data, images, tags: suggestedTags });
+    console.log('Listing data:', { ...data, images, aiGenerated });
     
     // Simulate listing creation
     const newListingId = `listing-${Date.now()}`;
@@ -111,7 +106,7 @@ const ListItemPage: React.FC = () => {
             List Your Item
           </h1>
           <p className="text-sage-300">
-            Upload photos and let AI help you create the perfect listing
+            Upload photos and let AI automatically fill out your listing details
           </p>
         </div>
 
@@ -154,68 +149,29 @@ const ListItemPage: React.FC = () => {
             </div>
             
             <p className="text-sm text-sage-400">
-              Add up to 5 photos. First photo will be the main image.
+              Add up to 5 photos. AI will analyze them to auto-fill your listing details.
             </p>
           </div>
 
-          {/* AI Suggestions */}
-          {isAIProcessing && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-sage-500/10 border border-sage-500/20 rounded-2xl p-6"
-            >
-              <div className="flex items-center mb-3">
-                <Sparkles className="text-sage-400 mr-2" size={20} />
-                <span className="text-sage-400 font-medium">AI is analyzing your photos...</span>
-              </div>
-              <div className="animate-pulse bg-sage-500/20 h-2 rounded-full"></div>
-            </motion.div>
-          )}
+          {/* AI Listing Assistant */}
+          <AIListingAssistant
+            images={images}
+            onDataGenerated={handleAIDataGenerated}
+            isProcessing={isAIProcessing}
+            setIsProcessing={setIsAIProcessing}
+          />
 
-          {suggestedTags.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-sage-500/10 border border-sage-500/20 rounded-2xl p-6"
-            >
-              <div className="flex items-center mb-3">
-                <Sparkles className="text-sage-400 mr-2" size={20} />
-                <span className="text-sage-400 font-medium">AI Suggestions</span>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-sage-300 mb-2">Suggested tags:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {suggestedTags.map(tag => (
-                      <span key={tag} className="bg-sage-500/20 text-sage-400 px-3 py-1 rounded-full text-sm">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {suggestedPrice && (
-                  <div className="flex items-center justify-between bg-sage-800/50 rounded-xl p-3">
-                    <div>
-                      <p className="text-sm text-sage-300">Suggested price:</p>
-                      <p className="text-lg font-bold text-white">${suggestedPrice}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={acceptSuggestedPrice}
-                      className="px-4 py-2 bg-sage-500 text-white rounded-lg hover:bg-sage-600 transition-colors"
-                    >
-                      Use Price
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Item Details */}
+          {/* Manual Item Details */}
           <div className="bg-sage-900/20 backdrop-blur-lg rounded-2xl p-6 border border-sage-700 space-y-4">
-            <h3 className="text-lg font-semibold text-white mb-4">Item Details</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">Item Details</h3>
+              {aiGenerated && (
+                <div className="flex items-center text-green-400 text-sm">
+                  <Wand2 size={14} className="mr-1" />
+                  AI Generated
+                </div>
+              )}
+            </div>
             
             <div>
               <input
@@ -233,7 +189,7 @@ const ListItemPage: React.FC = () => {
               <textarea
                 {...register('description', { required: 'Description is required' })}
                 placeholder="Describe the item, its condition, and why you're selling it..."
-                rows={4}
+                rows={6}
                 className="w-full px-4 py-3 bg-charcoal-700 border border-sage-600 rounded-xl text-white placeholder-sage-400 focus:border-sage-500 focus:outline-none transition-colors resize-none"
               />
               {errors.description && (
@@ -310,10 +266,11 @@ const ListItemPage: React.FC = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-sage text-white font-semibold py-4 rounded-2xl hover:shadow-premium transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+            disabled={isAIProcessing}
+            className="w-full bg-gradient-sage text-white font-semibold py-4 rounded-2xl hover:shadow-premium transform hover:scale-105 transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="mr-2" size={20} />
-            List Item
+            {isAIProcessing ? 'AI Processing...' : 'List Item'}
           </button>
         </form>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Wand2, Palette, Home, Heart, Lightbulb } from 'lucide-react';
+import { Sparkles, Wand2, Palette, Home, Heart, Lightbulb, Mic } from 'lucide-react';
+import VoiceStyleInput from './VoiceStyleInput';
 
 interface AIStylePromptProps {
   onStyleGenerate: (prompt: string, mood: string, elements: string[]) => void;
@@ -11,6 +12,7 @@ const AIStylePrompt: React.FC<AIStylePromptProps> = ({ onStyleGenerate, isProces
   const [customPrompt, setCustomPrompt] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
   const [selectedElements, setSelectedElements] = useState<string[]>([]);
+  const [showVoiceInput, setShowVoiceInput] = useState(false);
 
   const moods = [
     { id: 'cozy', name: 'Cozy & Warm', emoji: '🔥', description: 'Soft textures, warm lighting' },
@@ -49,6 +51,13 @@ const AIStylePrompt: React.FC<AIStylePromptProps> = ({ onStyleGenerate, isProces
     onStyleGenerate(finalPrompt, selectedMood, selectedElements);
   };
 
+  const handleVoiceInput = (transcript: string) => {
+    setCustomPrompt(transcript);
+    setSelectedMood('');
+    setSelectedElements([]);
+    setShowVoiceInput(false);
+  };
+
   const suggestedPrompts = [
     "Cozy minimalist dorm with plants and warm string lights",
     "Modern industrial style with exposed brick and metal accents",
@@ -64,98 +73,134 @@ const AIStylePrompt: React.FC<AIStylePromptProps> = ({ onStyleGenerate, isProces
           <Sparkles className="mr-2" size={20} />
           AI Style Generator
         </h3>
-        <p className="text-sage-300">Describe your dream room or choose elements to create the perfect style</p>
+        <p className="text-sage-300">Describe your dream room using text or voice input</p>
       </div>
 
-      {/* Custom Prompt */}
-      <div>
-        <label className="block text-sm font-medium text-sage-300 mb-2">
-          Describe Your Ideal Room Style
-        </label>
-        <textarea
-          value={customPrompt}
-          onChange={(e) => setCustomPrompt(e.target.value)}
-          placeholder="Describe your dream room in detail... (e.g., 'A cozy reading nook with vintage furniture, warm lighting, and lots of books')"
-          className="w-full px-4 py-3 bg-charcoal-800 border border-sage-600 rounded-xl text-white placeholder-sage-400 focus:border-sage-400 focus:outline-none transition-colors resize-none"
-          rows={3}
+      {/* Input Method Toggle */}
+      <div className="flex space-x-1 bg-charcoal-800 rounded-xl p-1">
+        <button
+          onClick={() => setShowVoiceInput(false)}
+          className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-200 ${
+            !showVoiceInput
+              ? 'bg-gradient-sage text-white shadow-lg'
+              : 'text-sage-300 hover:text-white hover:bg-sage-700'
+          }`}
+        >
+          <Palette className="mr-2" size={16} />
+          Text Input
+        </button>
+        <button
+          onClick={() => setShowVoiceInput(true)}
+          className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-200 ${
+            showVoiceInput
+              ? 'bg-gradient-sage text-white shadow-lg'
+              : 'text-sage-300 hover:text-white hover:bg-sage-700'
+          }`}
+        >
+          <Mic className="mr-2" size={16} />
+          Voice Input
+        </button>
+      </div>
+
+      {/* Voice Input */}
+      {showVoiceInput ? (
+        <VoiceStyleInput 
+          onVoiceInput={handleVoiceInput}
+          isProcessing={isProcessing}
         />
-      </div>
+      ) : (
+        <>
+          {/* Custom Prompt */}
+          <div>
+            <label className="block text-sm font-medium text-sage-300 mb-2">
+              Describe Your Ideal Room Style
+            </label>
+            <textarea
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              placeholder="Describe your dream room in detail... (e.g., 'A cozy reading nook with vintage furniture, warm lighting, and lots of books')"
+              className="w-full px-4 py-3 bg-charcoal-800 border border-sage-600 rounded-xl text-white placeholder-sage-400 focus:border-sage-400 focus:outline-none transition-colors resize-none"
+              rows={3}
+            />
+          </div>
 
-      {/* Suggested Prompts */}
-      <div>
-        <label className="block text-sm font-medium text-sage-300 mb-3">
-          <Lightbulb className="inline mr-1" size={14} />
-          Quick Ideas
-        </label>
-        <div className="grid gap-2">
-          {suggestedPrompts.map((prompt, index) => (
-            <button
-              key={index}
-              onClick={() => setCustomPrompt(prompt)}
-              className="text-left p-3 bg-sage-800/30 hover:bg-sage-700/50 rounded-lg transition-colors text-sage-300 hover:text-white text-sm"
-            >
-              "{prompt}"
-            </button>
-          ))}
-        </div>
-      </div>
+          {/* Suggested Prompts */}
+          <div>
+            <label className="block text-sm font-medium text-sage-300 mb-3">
+              <Lightbulb className="inline mr-1" size={14} />
+              Quick Ideas
+            </label>
+            <div className="grid gap-2">
+              {suggestedPrompts.map((prompt, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCustomPrompt(prompt)}
+                  className="text-left p-3 bg-sage-800/30 hover:bg-sage-700/50 rounded-lg transition-colors text-sage-300 hover:text-white text-sm"
+                >
+                  "{prompt}"
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <div className="text-center text-sage-400 text-sm">
-        — OR BUILD YOUR STYLE —
-      </div>
+          <div className="text-center text-sage-400 text-sm">
+            — OR BUILD YOUR STYLE —
+          </div>
 
-      {/* Mood Selection */}
-      <div>
-        <label className="block text-sm font-medium text-sage-300 mb-3">
-          <Heart className="inline mr-1" size={14} />
-          Choose a Mood
-        </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {moods.map((mood) => (
-            <button
-              key={mood.id}
-              onClick={() => setSelectedMood(mood.id === selectedMood ? '' : mood.id)}
-              className={`p-3 rounded-xl border-2 transition-all duration-300 text-left ${
-                selectedMood === mood.id
-                  ? 'border-sage-400 bg-sage-500/10'
-                  : 'border-sage-600 hover:border-sage-500'
-              }`}
-            >
-              <div className="text-2xl mb-1">{mood.emoji}</div>
-              <h4 className="font-medium text-white text-sm">{mood.name}</h4>
-              <p className="text-xs text-sage-400">{mood.description}</p>
-            </button>
-          ))}
-        </div>
-      </div>
+          {/* Mood Selection */}
+          <div>
+            <label className="block text-sm font-medium text-sage-300 mb-3">
+              <Heart className="inline mr-1" size={14} />
+              Choose a Mood
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {moods.map((mood) => (
+                <button
+                  key={mood.id}
+                  onClick={() => setSelectedMood(mood.id === selectedMood ? '' : mood.id)}
+                  className={`p-3 rounded-xl border-2 transition-all duration-300 text-left ${
+                    selectedMood === mood.id
+                      ? 'border-sage-400 bg-sage-500/10'
+                      : 'border-sage-600 hover:border-sage-500'
+                  }`}
+                >
+                  <div className="text-2xl mb-1">{mood.emoji}</div>
+                  <h4 className="font-medium text-white text-sm">{mood.name}</h4>
+                  <p className="text-xs text-sage-400">{mood.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Style Elements */}
-      <div>
-        <label className="block text-sm font-medium text-sage-300 mb-3">
-          <Palette className="inline mr-1" size={14} />
-          Add Style Elements
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {styleElements.map((element) => (
-            <button
-              key={element}
-              onClick={() => toggleElement(element)}
-              className={`px-3 py-2 rounded-full text-sm transition-all duration-300 ${
-                selectedElements.includes(element)
-                  ? 'bg-sage-500 text-white'
-                  : 'bg-sage-800/50 text-sage-300 hover:bg-sage-700/50 hover:text-white'
-              }`}
-            >
-              {element}
-            </button>
-          ))}
-        </div>
-        {selectedElements.length > 0 && (
-          <p className="text-sage-400 text-sm mt-2">
-            Selected: {selectedElements.join(', ')}
-          </p>
-        )}
-      </div>
+          {/* Style Elements */}
+          <div>
+            <label className="block text-sm font-medium text-sage-300 mb-3">
+              <Palette className="inline mr-1" size={14} />
+              Add Style Elements
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {styleElements.map((element) => (
+                <button
+                  key={element}
+                  onClick={() => toggleElement(element)}
+                  className={`px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                    selectedElements.includes(element)
+                      ? 'bg-sage-500 text-white'
+                      : 'bg-sage-800/50 text-sage-300 hover:bg-sage-700/50 hover:text-white'
+                  }`}
+                >
+                  {element}
+                </button>
+              ))}
+            </div>
+            {selectedElements.length > 0 && (
+              <p className="text-sage-400 text-sm mt-2">
+                Selected: {selectedElements.join(', ')}
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Generate Button */}
       <button
@@ -168,7 +213,7 @@ const AIStylePrompt: React.FC<AIStylePromptProps> = ({ onStyleGenerate, isProces
       </button>
 
       {/* Style Preview */}
-      {(selectedMood || selectedElements.length > 0) && !customPrompt && (
+      {(selectedMood || selectedElements.length > 0) && !customPrompt && !showVoiceInput && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
